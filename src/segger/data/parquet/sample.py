@@ -1294,7 +1294,14 @@ class STTile:
                 nuclear_value=nuclear_value,
             )
         else:
-            is_nuclear = self.transcripts[nuclear_column].eq(nuclear_value)
+            # Handle both boolean and numeric dtypes for nuclear column
+            # Xenium data may store overlaps_nucleus as bool (True/False) or uint8 (0/1)
+            col_data = self.transcripts[nuclear_column]
+            if col_data.dtype == bool:
+                # For boolean columns, compare against truthy value
+                is_nuclear = col_data.eq(bool(nuclear_value))
+            else:
+                is_nuclear = col_data.eq(nuclear_value)
         is_nuclear &= tx_cell_ids.isin(polygons.index)
 
         # Set up overlap edges
