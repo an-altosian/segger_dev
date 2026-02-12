@@ -7,7 +7,7 @@ import lightning as L
 from segger.models.segger_model import *
 from segger.data.utils import SpatialTranscriptomicsDataset
 from typing import Any, List, Tuple, Union
-from pytorch_lightning import LightningModule
+from lightning.pytorch import LightningModule
 import inspect
 
 
