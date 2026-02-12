@@ -1,7 +1,11 @@
 # Base image with CUDA 12.1 runtime and cuDNN
 FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
 
-# Install essential system tools and Python
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install essential system tools
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     git \
     wget \
@@ -10,14 +14,23 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     htop \
     vim \
     build-essential \
-    python3 \
-    python3-pip \
-    python3-venv \
-    && apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    python3.11-distutils \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create a symbolic link to enable `python` instead of `python3`
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# Set Python 3.11 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+
+# Install pip
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
 
 # Install global python tools
 RUN python -m pip install --no-cache-dir --upgrade pip && \
@@ -26,12 +39,34 @@ RUN python -m pip install --no-cache-dir --upgrade pip && \
 # Set working directory
 WORKDIR /workspace
 
-# Clone the repository and install segger with CUDA 12 support
-RUN git clone https://github.com/EliHei2/segger_dev.git /workspace/segger_dev && \
-    pip install -e "/workspace/segger_dev[cuda12]"
+# Install PyTorch with CUDA support first (from PyTorch index)
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Install pytorch-lightning and torchmetrics
+# Note: 'lightning' is the new package name (was 'pytorch-lightning')
+RUN pip install --no-cache-dir lightning torchmetrics
+
+# Install cupy for CUDA operations
+RUN pip install --no-cache-dir cupy-cuda12x
+
+# Install dask distributed and geopandas for parallel processing
+RUN pip install --no-cache-dir "dask[distributed]" dask-geopandas faiss-cpu
+
+# Clone segger_dev from fork (includes boolean dtype fix)
+COPY . /workspace/segger_dev
+
+# Fix 1: Remove typo in train_model.py (line 62 has "uv a" which is invalid Python)
+RUN sed -i '/^uv a$/d' /workspace/segger_dev/src/segger/cli/train_model.py || true
+
+# Install segger
+RUN pip install -e "/workspace/segger_dev"
+
+# Pin squidpy to compatible version with anndata (install AFTER segger to override)
+# Also pin click to avoid CLI utils issues
+RUN pip install --no-cache-dir --force-reinstall squidpy==1.8.1 click==8.1.7
 
 # Set environment variables
-ENV PYTHONPATH=/workspace/segger_dev/src:$PYTHONPATH
+ENV PYTHONPATH=/workspace/segger_dev/src
 
 # expose ports for debugpy and jupyterlab
 EXPOSE 5678 8888
