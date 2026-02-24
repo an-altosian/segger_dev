@@ -68,9 +68,6 @@ help_msg = "Run the Segger segmentation model."
     "--knn_method", type=str, default="cuda", help="Method for KNN computation."
 )
 @click.option(
-    "--gpu_ids", type=str, default="0", help="Comma-separated GPU IDs for inference (e.g. '0,1,2')."
-)
-@click.option(
     "--file_format", type=str, default="anndata", help="File format for output data."
 )
 @click.option("--k_bd", type=int, default=4, help="K value for boundary computation.")
