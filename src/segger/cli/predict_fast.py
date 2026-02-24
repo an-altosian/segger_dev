@@ -68,6 +68,9 @@ help_msg = "Run the Segger segmentation model."
     "--knn_method", type=str, default="cuda", help="Method for KNN computation."
 )
 @click.option(
+    "--gpu_ids", type=str, default="0", help="Comma-separated GPU IDs for inference (e.g. '0,1,2')."
+)
+@click.option(
     "--file_format", type=str, default="anndata", help="File format for output data."
 )
 @click.option("--k_bd", type=int, default=4, help="K value for boundary computation.")
@@ -102,6 +105,8 @@ def run_segmentation(args: Namespace):
     model = load_model(model_path / "checkpoints")
 
     logger.info("Running segmentation...")
+    gpu_id_list = [g.strip() for g in args.gpu_ids.split(",")]
+    logger.info(f"Using GPU IDs: {gpu_id_list}")
     segment(
         model,
         dm,
@@ -119,6 +124,7 @@ def run_segmentation(args: Namespace):
         cell_id_col=args.cell_id_col,
         use_cc=args.use_cc,
         knn_method=args.knn_method,
+        gpu_ids=gpu_id_list,
         verbose=True,
     )
 
