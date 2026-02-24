@@ -35,8 +35,6 @@ import dask
 
 # from rmm.allocators.cupy import rmm_cupy_allocator
 from cupyx.scipy.sparse import coo_matrix
-from torch.utils.dlpack import to_dlpack, from_dlpack
-
 from dask.distributed import Client, LocalCluster
 import cupy as cp
 import numpy as np
