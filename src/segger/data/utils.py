@@ -501,7 +501,8 @@ class SpatialTranscriptomicsDataset(InMemoryDataset):
             Data: The processed data object.
         """
         data = torch.load(
-            os.path.join(self.processed_dir, self.processed_file_names[idx])
+            os.path.join(self.processed_dir, self.processed_file_names[idx]),
+            weights_only=False,
         )
         data["tx"].x = data["tx"].x.to_dense()
         return data
