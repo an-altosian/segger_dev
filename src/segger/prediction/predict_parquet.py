@@ -33,7 +33,6 @@ import dask
 
 # from rmm.allocators.cupy import rmm_cupy_allocator
 from cupyx.scipy.sparse import coo_matrix
-from torch.utils.dlpack import to_dlpack, from_dlpack
 
 from dask.distributed import Client, LocalCluster
 import cupy as cp
@@ -286,8 +285,8 @@ def get_similarity_scores(
             indices = torch.argwhere(edge_index != -1).T
             indices[1] = edge_index[edge_index != -1]
             indices_gpu = indices.to("cuda")  # Keep reference
-            rows = cp.fromDlpack(to_dlpack(indices_gpu[0, :]))
-            columns = cp.fromDlpack(to_dlpack(indices_gpu[1, :]))
+            rows = cp.from_dlpack(indices_gpu[0, :])
+            columns = cp.from_dlpack(indices_gpu[1, :])
             del indices_gpu  # Delete only after CuPy arrays exist
             stream = cp.cuda.get_current_stream()
             stream.synchronize()  # <-- ADD THIS
@@ -295,7 +294,7 @@ def get_similarity_scores(
             del indices
             values = similarity[edge_index != -1].flatten()
             sparse_result = coo_matrix(
-                (cp.fromDlpack(to_dlpack(values)), (rows, columns)), shape=shape
+                (cp.from_dlpack(values), (rows, columns)), shape=shape
             )
             stream.synchronize()
             return sparse_result
