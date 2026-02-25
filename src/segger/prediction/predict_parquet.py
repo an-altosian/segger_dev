@@ -342,7 +342,7 @@ def predict_batch(
         return "".join(np.random.choice(list("abcdefghijklmnopqrstuvwxyz"), 8)) + "-nx"
 
     # print(gpu_id)
-    with cp.cuda.Device(gpu_id):
+    with cp.cuda.Device(gpu_id), torch.no_grad():
         # Move the batch to the specified GPU
         batch = batch.to(f"cuda:{gpu_id}")
         lit_segger.model = lit_segger.model.to(f"cuda:{gpu_id}")
