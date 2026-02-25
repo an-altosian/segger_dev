@@ -1,4 +1,3 @@
 # Ignore artifacts:
 docs/*
 mkdocs.yml
-analysis_summary.html
