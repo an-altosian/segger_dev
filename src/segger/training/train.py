@@ -207,7 +207,9 @@ class LitSegger(LightningModule):
 
         # Log validation metrics
         self.log("validation_loss", loss, batch_size=batch.num_graphs)
-        self.log("validation_auroc", auroc_res, prog_bar=True, batch_size=batch.num_graphs)
+        self.log(
+            "validation_auroc", auroc_res, prog_bar=True, batch_size=batch.num_graphs
+        )
         self.log("validation_f1", f1_res, prog_bar=True, batch_size=batch.num_graphs)
 
         return loss
